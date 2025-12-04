@@ -1,0 +1,92 @@
+from backend.vendor_models import VendorConfig, SearchResultProduct, FetchMethod, ProductSchema
+from backend.vendor_scrapper import BaseVendorScraper
+from typing import List, Dict, Any, Optional, Callable
+from pipeline.vendor_selectors import *
+
+TraklinConfig = VendorConfig(
+    name="Traklin",
+    autocomplete_endpoint="https://www.traklin.co.il/ajax/content_auto_suggest.ashx",
+    search_param="prefix"
+)
+
+PayngoConfig = VendorConfig(
+    name="Payngo",
+    autocomplete_endpoint="https://api.instantsearchplus.com",
+    search_param="q",
+    params={
+        "store_id": 1,
+        "UUID": "b655c070-2db6-4709-933f-df029bd118a8",
+        "cdn_cache_key": "1757229797"
+    }   
+)
+
+ShekemConfig = VendorConfig(
+    name="Shekem",
+    autocomplete_endpoint="https://api.instantsearchplus.com",
+    search_param="q",
+    params={
+        "store_id": 2,
+        "UUID": "b655c070-2db6-4709-933f-df029bd118a8",
+        "cdn_cache_key": "1757229797"
+    }   
+)
+
+LastPriceConfig = VendorConfig(
+    name="LastPrice",
+    autocomplete_endpoint="https://www.lastprice.co.il/oapi/oapi_searchbox.asp",
+    data={
+        "query": "",
+        "ResultLimit": "30",
+    }  
+)
+
+KSPConfig = VendorConfig(
+    name="KSP",
+    autocomplete_endpoint="https://ksp.co.il/m_action/api/category/0",
+    search_param="search",
+    fetch_method=FetchMethod.API,
+    product_data_endpoint="https://ksp.co.il/m_action/api/item"
+)
+
+
+class TraklinScraper(BaseVendorScraper):
+    def parse_search_result(self, item):
+        return SearchResultProduct(**traklin_selector(item))
+
+class PayngoScraper(BaseVendorScraper):
+    def parse_search_result(self, item):
+        return SearchResultProduct(**payngo_selector(item))
+
+class ShekemScraper(BaseVendorScraper):
+    def parse_search_result(self, item):
+        return SearchResultProduct(**shekem_selector(item))
+
+class LastPriceScraper(BaseVendorScraper):
+    def parse_search_result(self, item):
+        return SearchResultProduct(**lastprice_selector(item))
+
+class KSPScraper(BaseVendorScraper):
+    def parse_search_result(self, item):
+        return SearchResultProduct(**ksp_selector(item))
+    
+    def parse_product_data(self, item: Dict[str, Any], search_result_product: SearchResultProduct) -> ProductSchema:
+        item__result__data = item["result"]["data"]
+        return ProductSchema(
+            SKU=item__result__data["uin"],
+            name=item__result__data["name"],
+            offers__price=item__result__data["price"],
+            orig_price=search_result_product.orig_price,
+            disc_price=search_result_product.disc_price,
+            currency="ILS",
+            url=item["seo"]["myUrl"],
+            images=[img_obj["sizes"]["b"]["src"] for img_obj in item["result"]['images']],
+            description=item__result__data["smalldesc"],
+            availability="",
+            item_condition="",
+            brand=item__result__data["brandName"],
+            metadata={
+                "cheaperViaPhone": item__result__data["cheaperPriceViaPhone"],
+                "redMsg": item["result"]["redMsg"],
+                "tags": item["result"]["tags"]
+            }
+        )
