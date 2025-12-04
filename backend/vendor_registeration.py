@@ -1,7 +1,7 @@
 from backend.vendor_models import VendorConfig, SearchResultProduct, FetchMethod, ProductSchema
 from backend.vendor_scrapper import BaseVendorScraper
 from typing import List, Dict, Any, Optional, Callable
-from pipeline.vendor_selectors import *
+from backend.vendor_selectors import *
 
 TraklinConfig = VendorConfig(
     name="Traklin",
