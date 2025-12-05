@@ -1,2 +1,4 @@
 aiohttp
 selectolax
+asyncpg
+python-dotenv

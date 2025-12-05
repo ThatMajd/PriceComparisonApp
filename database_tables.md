@@ -4,7 +4,7 @@
 ```sql
 CREATE TABLE IF NOT EXISTS vendors (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL UNIQUE,
     website_url TEXT,
     created_at TIMESTAMP DEFAULT NOW()
 );
@@ -15,11 +15,13 @@ CREATE TABLE IF NOT EXISTS vendors (
 CREATE TABLE IF NOT EXISTS products (
     traklin_sku INTEGER,
     vendor_sku VARCHAR(255),
+    vendor_id INTEGER,
     name VARCHAR(500) NOT NULL,
     description TEXT,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW(),
-    PRIMARY KEY (traklin_sku, vendor_sku)
+    PRIMARY KEY (traklin_sku, vendor_sku),
+    FOREIGN KEY (vendor_id) REFERENCES vendors(id)
 );
 ```
 
