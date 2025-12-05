@@ -17,12 +17,22 @@ CREATE TABLE IF NOT EXISTS products (
     PRIMARY KEY (traklin_sku, vendor_sku)
 );
 
+-- Create Scraping Sessions Table
+CREATE TABLE IF NOT EXISTS scraping_sessions (
+    scrape_id SERIAL PRIMARY KEY,
+    scraped_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    query TEXT,
+    num_results INTEGER,
+    initiator VARCHAR(50),
+    status VARCHAR(50)
+);
+
 -- Create Product Snapshots Table
 CREATE TABLE IF NOT EXISTS product_snapshots (
     id SERIAL PRIMARY KEY,
     traklin_sku INTEGER NOT NULL,
     vendor_sku VARCHAR(255) NOT NULL,
-    scraped_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    scrape_id INTEGER,
     
     -- Core product data
     name VARCHAR(500) NOT NULL,
@@ -42,5 +52,6 @@ CREATE TABLE IF NOT EXISTS product_snapshots (
     brand VARCHAR(255),
     metadata JSONB,
     
-    FOREIGN KEY (traklin_sku, vendor_sku) REFERENCES products(traklin_sku, vendor_sku) ON DELETE CASCADE
+    FOREIGN KEY (traklin_sku, vendor_sku) REFERENCES products(traklin_sku, vendor_sku) ON DELETE CASCADE,
+    FOREIGN KEY (scrape_id) REFERENCES scraping_sessions(scrape_id) ON DELETE SET NULL
 );
