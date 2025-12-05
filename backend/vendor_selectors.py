@@ -1,4 +1,13 @@
-from pipeline.exceptions import InvalidAPIResponseError, VendorNotSupportedError
+class InvalidAPIResponseError(Exception):
+    """Raised when the API response doesn't match the expected protocol."""
+    pass
+
+class VendorNotSupportedError(Exception):
+    """Raised when vendor is not yet supported."""
+    pass
+
+class ConfigurationError(Exception):
+    """Raised when an incorrect configuration is setup"""
 
 # TODO
 # 1. Move the exception to a seprate file

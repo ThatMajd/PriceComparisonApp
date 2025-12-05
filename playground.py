@@ -1,7 +1,7 @@
 from backend.vendor_scrapper import BaseVendorScraper
 from backend.vendor_registeration import *
 from backend.vendor_scrapper import VendorConfig, SearchResultProduct
-from pipeline.vendor_selectors import *
+from backend.vendor_selectors import *
 import asyncio
 from typing import List
 import aiohttp
