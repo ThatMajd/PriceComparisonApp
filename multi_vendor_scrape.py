@@ -57,6 +57,8 @@ async def run_multi_vendor_scrape(query: str, initiator: str = "user"):
     db = Database()
     await db.connect()
     
+    saved_results = []
+    
     try:
         # Create Session
         scrape_id = await db.create_scraping_session(query, initiator)
@@ -76,7 +78,7 @@ async def run_multi_vendor_scrape(query: str, initiator: str = "user"):
         if not traklin_result:
             logger.warning("No Traklin result found. Cannot determine 'traklin_sku' for grouping. Skipping insert.")
             await db.update_session_status(scrape_id, "failed_no_traklin_match", 0)
-            return
+            return []
         
         # Ensure Traklin result has a valid numeric SKU (based on selector logic it should)
         try:
@@ -84,7 +86,7 @@ async def run_multi_vendor_scrape(query: str, initiator: str = "user"):
         except ValueError:
             logger.error(f"Traklin SKU '{traklin_result.SKU}' is not an integer. Cannot insert.")
             await db.update_session_status(scrape_id, "failed_invalid_traklin_sku", 0)
-            return
+            return []
 
         # Insert Results
         count = 0
@@ -96,12 +98,15 @@ async def run_multi_vendor_scrape(query: str, initiator: str = "user"):
                 # Insert Snapshot
                 await db.insert_snapshot(scrape_id, traklin_sku, product)
                 count += 1
+                saved_results.append((vendor_name, product))
             except Exception as e:
                 logger.error(f"Failed to save result for {vendor_name}: {e}")
 
         # Update Session Status
         await db.update_session_status(scrape_id, "completed", count)
         logger.info(f"Scraping session {scrape_id} completed with {count} saved results.")
+        
+        return saved_results
 
     finally:
         await db.close()

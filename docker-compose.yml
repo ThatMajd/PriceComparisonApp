@@ -12,3 +12,22 @@ services:
       - "5433:5432"
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: cpp-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://testuser:testpassword@db:5432/testdb
+      - POSTGRES_USER=testuser
+      - POSTGRES_PASSWORD=testpassword
+      - POSTGRES_DB=testdb
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+    depends_on:
+      - db
+    volumes:
+      - .:/app

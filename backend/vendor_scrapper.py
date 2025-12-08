@@ -146,7 +146,7 @@ class BaseVendorScraper(ABC):
     ):
         
         prod_sku = search_result_product.SKU or search_result_product.url.split("/")[-1]
-        prod_url = f"{self.config.product_data_endpoint.strip("/")}/{prod_sku}"
+        prod_url = f"{self.config.product_data_endpoint.strip('/')}/{prod_sku}"
         
         prod_obj = await self._fetch(session, prod_url, is_return_json=True)
         
