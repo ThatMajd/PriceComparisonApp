@@ -1,7 +1,14 @@
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from datetime import datetime
+from enum import Enum
 from .database import Base
+
+class ScrapeInitiator(Enum):
+    """Scrape initiator"""
+    API = "API" # User Initiated
+    CRON = "CRON" # Scheduled
+    
 
 class Vendor(Base):
     __tablename__ = "vendors"
