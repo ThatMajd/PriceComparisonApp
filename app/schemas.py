@@ -37,6 +37,7 @@ class ScrapedProductSchema(BaseModel):
     item_condition: Optional[str]
     brand: Optional[str]
     metadata: Optional[Dict[str, Any]]
+    additional_info: Optional[Dict[str, Any]]
 
 class ScrapedResult(BaseModel):
     vendor: str

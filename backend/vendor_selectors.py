@@ -43,6 +43,9 @@ def traklin_selector(results):
         "img_src": item["img_src"],
         "orig_price": 0,
         "disc_price": 0,
+        "additional_info": {
+            "internal_id": int(item["value"]),
+        }
     }
 
 

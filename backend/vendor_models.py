@@ -31,6 +31,7 @@ class ProductSchema:
     item_condition: Optional[str] = None
     brand: Optional[str] = None
     metadata: Optional[Dict[str, Any]] = None
+    additional_info: Dict[str, Any] = field(default_factory=dict)
 
 @dataclass
 class SearchResultProduct:
@@ -41,6 +42,7 @@ class SearchResultProduct:
     img_src: Optional[str] = None
     orig_price: Optional[int] = None
     disc_price: Optional[int] = None
+    additional_info: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)

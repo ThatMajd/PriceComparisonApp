@@ -36,7 +36,7 @@ async def scrape(query: str, db: Session = Depends(get_db)):
     """
     from multi_vendor_scrape import run_multi_vendor_scrape
     
-    results = await run_multi_vendor_scrape(query, initiator=ScrapeInitiator.API)
+    results = await run_multi_vendor_scrape(query, initiator=ScrapeInitiator.API.value)
     
     return [
         {"vendor": vendor_name, "product": product.__dict__}

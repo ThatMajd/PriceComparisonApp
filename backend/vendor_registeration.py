@@ -88,5 +88,6 @@ class KSPScraper(BaseVendorScraper):
                 "cheaperViaPhone": item__result__data["cheaperPriceViaPhone"],
                 "redMsg": item["result"]["redMsg"],
                 "tags": item["result"]["tags"]
-            }
+            },
+            additional_info=search_result_product.additional_info
         )

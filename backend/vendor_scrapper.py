@@ -188,8 +188,8 @@ class BaseVendorScraper(ABC):
                     
                     SKU=prod_sku,
                     brand=prod_brand,
-                    images=[prod_obj.get("image") or search_result_product.image_url],
+                    images=[prod_obj.get("image") or search_result_product.img_src],
                     
-                    metadata={"aggregateRating": prod_obj.get("aggregateRating")}
+                    metadata={"aggregateRating": prod_obj.get("aggregateRating")},
+                    additional_info=search_result_product.additional_info
                     )
-                

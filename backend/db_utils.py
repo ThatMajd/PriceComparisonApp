@@ -93,6 +93,11 @@ class Database:
             # However asyncpg automatically converts python types to postgres types.
             
             # Using query parameters
+            # Merge additional_info into metadata for storage
+            final_metadata = (product.metadata or {}).copy()
+            if product.additional_info:
+                final_metadata.update(product.additional_info)
+
             await conn.execute("""
                 INSERT INTO product_snapshots (
                     traklin_sku, vendor_sku, scrape_id,
@@ -109,7 +114,7 @@ class Database:
             traklin_sku, str(product.SKU), scrape_id,
             product.name, product.url,
             safe_int(product.offers__price), safe_int(product.orig_price), safe_int(product.disc_price), product.currency,
-            import_json(product.images), product.description, product.availability, product.item_condition, product.brand, import_json(product.metadata)
+            import_json(product.images), product.description, product.availability, product.item_condition, product.brand, import_json(final_metadata)
             )
 
 import json
