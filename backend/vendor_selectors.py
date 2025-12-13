@@ -149,9 +149,6 @@ def neto_selector(results):
         name_el = li.select_one("a.amsearch-link")
         name = name_el.get_text(strip=True) if name_el else None
 
-        # SKU: highlighted part (e.g. AG653)
-        sku_el = li.select_one("a.amsearch-link span.amsearch-highlight")
-        sku = sku_el.get_text(strip=True) if sku_el else None
 
         # Image URL
         img_el = li.select_one("img.product-image-photo")
@@ -167,21 +164,25 @@ def neto_selector(results):
                 pass
 
         # Optional brand and internal product id for additional_info
-        brand_img = li.select_one(".amshopby-option-link img")
-        brand = brand_img["alt"] if brand_img and brand_img.has_attr("alt") else None
+        # brand_img = li.select_one(".amshopby-option-link img")
+        # brand = brand_img["alt"] if brand_img and brand_img.has_attr("alt") else None
 
         price_box = li.select_one(".price-box")
-        internal_id = (
-            int(price_box["data-product-id"])
+
+        # SKU: highlighted part (e.g. AG653)
+        # sku_el = li.select_one("a.amsearch-link span.amsearch-highlight")
+        # sku = sku_el.get_text(strip=True) if sku_el else None
+        sku = (
+            price_box["data-product-id"]
             if price_box and price_box.has_attr("data-product-id")
-            else None
+            else "MISSING"
         )
 
         additional_info: Dict[str, Any] = {}
-        if brand:
-            additional_info["brand"] = brand
-        if internal_id is not None:
-            additional_info["internal_id"] = internal_id
+        # if brand:
+        #     additional_info["brand"] = brand
+        # if sku is not None:
+        #     additional_info["internal_id"] = sku
 
         return {
             "name": name,
