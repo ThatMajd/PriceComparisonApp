@@ -28,3 +28,8 @@ class NormalizationException(VendorScraperException):
 class NoProductsFoundException(VendorScraperException):
     """Raised when no products are found in search results"""
     pass
+
+
+class VendorNotFoundInDatabaseException(VendorScraperException):
+    """Raised when a vendor is not found in the database"""
+    pass

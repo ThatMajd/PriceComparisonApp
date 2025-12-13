@@ -5,6 +5,8 @@ from datetime import datetime
 from typing import Optional, Dict, List, Any
 from backend.vendor_models import ProductSchema
 
+from backend.vendor_exceptions import VendorNotFoundInDatabaseException
+
 logger = logging.getLogger(__name__)
 
 def safe_int(val):
@@ -56,13 +58,13 @@ class Database:
             """, query, initiator)
             return row['scrape_id']
 
-    async def update_session_status(self, scrape_id: int, status: str, num_results: int):
+    async def update_session_status(self, scrape_id: int, status: str, vendors_called: int = 0, valid_results: int = 0):
         async with self.pool.acquire() as conn:
             await conn.execute("""
                 UPDATE scraping_sessions
-                SET status = $1, num_results = $2
-                WHERE scrape_id = $3
-            """, status, num_results, scrape_id)
+                SET status = $1, vendors_called = $2, valid_results = $3
+                WHERE scrape_id = $4
+            """, status, vendors_called, valid_results, scrape_id)
 
     async def upsert_product(self, traklin_sku: int, product: ProductSchema, vendor_name: str):
         """
@@ -72,6 +74,8 @@ class Database:
         async with self.pool.acquire() as conn:
             # Get vendor_id
             vendor_id = await conn.fetchval("SELECT id FROM vendors WHERE name = $1", vendor_name)
+            if not vendor_id:
+                raise VendorNotFoundInDatabaseException(f"Vendor '{vendor_name}' not found in database")
             
             await conn.execute("""
                 INSERT INTO products (traklin_sku, vendor_sku, vendor_id, name, description, updated_at)

@@ -42,3 +42,8 @@ class ScrapedProductSchema(BaseModel):
 class ScrapedResult(BaseModel):
     vendor: str
     product: ScrapedProductSchema
+
+class ScrapeResponse(BaseModel):
+    query: str
+    status: str 
+    results: List[ScrapedResult]

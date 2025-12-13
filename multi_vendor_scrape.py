@@ -11,7 +11,8 @@ from backend.vendor_registeration import (
     KSPScraper, KSPConfig,
     PayngoScraper, PayngoConfig,
     ShekemScraper, ShekemConfig,
-    LastPriceScraper, LastPriceConfig
+    LastPriceScraper, LastPriceConfig,
+    NetoScraper, NetoConfig
 )
 
 # Configure logging
@@ -24,6 +25,7 @@ logger = logging.getLogger(__name__)
 # Registered Scrapers
 VENDORS = [
     (TraklinScraper, TraklinConfig),
+    (NetoScraper, NetoConfig),
     # (KSPScraper, KSPConfig),
     # (PayngoScraper, PayngoConfig),
     # (ShekemScraper, ShekemConfig),
@@ -103,8 +105,18 @@ async def run_multi_vendor_scrape(query: str, initiator: str = "user"):
                 logger.error(f"Failed to save result for {vendor_name}: {e}")
 
         # Update Session Status
-        await db.update_session_status(scrape_id, "completed", count)
-        logger.info(f"Scraping session {scrape_id} completed with {count} saved results.")
+        # Determine overall status
+        vendors_called = len(VENDORS)
+        valid_count = count
+        
+        status = "failure"
+        if valid_count == vendors_called:
+            status = "success"
+        elif valid_count > 0:
+            status = "partial_success"
+            
+        await db.update_session_status(scrape_id, status, vendors_called, valid_count)
+        logger.info(f"Scraping session {scrape_id} completed. Status: {status}. Saved: {valid_count}/{vendors_called}")
         
         return saved_results
 

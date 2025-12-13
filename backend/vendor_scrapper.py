@@ -47,19 +47,20 @@ class BaseVendorScraper(ABC):
         self,
         session: aiohttp.ClientSession,
         url: str,
-        headers: Optional[Dict[str, str]] = None, 
+        headers: Optional[Dict[str, str]] = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"}, 
         params: Optional[Dict[str, Any]] = None,
         data: Optional[Dict[str, Any]] = None,
+        cookies: Optional[Dict[str, Any]] = None,
         timeout: int = 20,
         is_return_json: bool = False
     ):
         """Fetch URL content with semaphore control"""
         
-        h = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"}
+        # h = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"}
         
         async with self.semaphore:
             try:
-                async with session.get(url, headers=h, params=params, data=data, timeout=timeout) as response:
+                async with session.get(url, headers=headers, params=params, data=data, cookies=cookies, timeout=timeout) as response:
                     response.raise_for_status()
                     if is_return_json:
                         return await response.json(content_type=None)
@@ -88,8 +89,10 @@ class BaseVendorScraper(ABC):
         config = self.config
         
         search_endpoint = config.autocomplete_endpoint
+        headers = dict(config.headers)
         params = dict(config.params)
         data = dict(config.data)
+        cookies = dict(config.cookies)
         
         # Build request 
         if config.search_param:
@@ -101,7 +104,7 @@ class BaseVendorScraper(ABC):
                 raise MissingFieldException("query keyword not found in data object, check API behavior")
             data["query"] = query
             
-        raw_products = await self._fetch(session, search_endpoint, params=params, data=data, is_return_json=True)
+        raw_products = await self._fetch(session, search_endpoint, headers=headers, params=params, data=data, cookies=cookies, is_return_json=True)
         
         # TODO
         # Log URL for debugging purposes
@@ -163,6 +166,10 @@ class BaseVendorScraper(ABC):
         for node in html.css('script[type="application/ld+json"]'):
             prod_obj = json.loads(node.text())
             
+            # Handle itemPage case - for Netoneto
+            if prod_obj.get("@type") == "ItemPage" and "mainEntity" in prod_obj:
+                prod_obj = prod_obj["mainEntity"]
+
             if prod_obj.get("@type") == "Product":
                 
                 prod_sku = prod_obj.get("SKU") or prod_obj["offers"].get("sku") or search_result_product.SKU

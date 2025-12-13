@@ -1,3 +1,5 @@
+from bs4 import BeautifulSoup
+
 class InvalidAPIResponseError(Exception):
     """Raised when the API response doesn't match the expected protocol."""
     pass
@@ -127,6 +129,73 @@ def ksp_selector(results):
     }
 
 
+def neto_selector(results):
+    try:
+        html = results['10']['html']
+    except KeyError:
+        raise InvalidAPIResponseError("Neto API response missing 'html' key")
+    
+    soup = BeautifulSoup(html, "html.parser")
+
+    # Each product is in <li class="amsearch-item product-item">
+    for li in soup.select("ul.amsearch-product-list li.amsearch-item.product-item"):
+        # URL: prefer data-click-url, fallback to the product link
+        url = li.get("data-click-url")
+        if not url:
+            link_el = li.select_one("a.amsearch-link")
+            url = link_el["href"] if link_el and link_el.has_attr("href") else None
+
+        # Name: text of the product link
+        name_el = li.select_one("a.amsearch-link")
+        name = name_el.get_text(strip=True) if name_el else None
+
+        # SKU: highlighted part (e.g. AG653)
+        sku_el = li.select_one("a.amsearch-link span.amsearch-highlight")
+        sku = sku_el.get_text(strip=True) if sku_el else None
+
+        # Image URL
+        img_el = li.select_one("img.product-image-photo")
+        img_src = img_el["src"] if img_el and img_el.has_attr("src") else None
+
+        # Price: data-price-amount attribute
+        price_el = li.select_one("[data-price-type='basePrice']")
+        disc_price = None
+        if price_el and price_el.has_attr("data-price-amount"):
+            try:
+                disc_price = int(float(price_el["data-price-amount"]))
+            except ValueError:
+                pass
+
+        # Optional brand and internal product id for additional_info
+        brand_img = li.select_one(".amshopby-option-link img")
+        brand = brand_img["alt"] if brand_img and brand_img.has_attr("alt") else None
+
+        price_box = li.select_one(".price-box")
+        internal_id = (
+            int(price_box["data-product-id"])
+            if price_box and price_box.has_attr("data-product-id")
+            else None
+        )
+
+        additional_info: Dict[str, Any] = {}
+        if brand:
+            additional_info["brand"] = brand
+        if internal_id is not None:
+            additional_info["internal_id"] = internal_id
+
+        return {
+            "name": name,
+            "SKU": sku,
+            "url": url,
+            "img_src": img_src,
+            "orig_price": disc_price,
+            "disc_price": None,
+            "additional_info": additional_info,
+        }
+        
+    
+
+
 _selectors = {
     "Traklin": traklin_selector,
     "Payngo": payngo_selector,
@@ -140,3 +209,5 @@ def get_vendor_selector(vendor):
         raise VendorNotSupportedError(f"{vendor} is not currently supported.")
     
     return _selectors[vendor]
+
+

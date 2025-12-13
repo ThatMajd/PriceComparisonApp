@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS vendors (
 CREATE TABLE IF NOT EXISTS products (
     traklin_sku INTEGER,
     vendor_sku VARCHAR(255),
-    vendor_id INTEGER,
+    vendor_id INTEGER NOT NULL,
     name VARCHAR(500) NOT NULL,
     description TEXT,
     created_at TIMESTAMP DEFAULT NOW(),
@@ -31,9 +31,10 @@ CREATE TABLE IF NOT EXISTS scraping_sessions (
     scrape_id SERIAL PRIMARY KEY,
     scraped_at TIMESTAMP NOT NULL DEFAULT NOW(),
     query TEXT,
-    num_results INTEGER,
     initiator VARCHAR(50),
-    status VARCHAR(50)
+    status VARCHAR(50),
+    vendors_called INTEGER DEFAULT 0,
+    valid_results INTEGER DEFAULT 0
 );
 ```
 

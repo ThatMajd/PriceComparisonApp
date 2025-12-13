@@ -55,6 +55,7 @@ class VendorConfig:
     autocomplete_endpoint: str
     headers: Dict[str, Any] = field(default_factory=dict)
     params: Dict[str, Any] = field(default_factory=dict)
+    cookies: Dict[str, Any] = field(default_factory=dict)
     data: Dict[str, Any] = field(default_factory=dict)
     search_param: Optional[str] = None
     fetch_method: FetchMethod = FetchMethod.HTML_JSON_LD

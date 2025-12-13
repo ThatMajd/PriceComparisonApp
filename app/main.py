@@ -28,20 +28,34 @@ def get_products(db: Session = Depends(get_db)):
     products = db.query(models.Product).order_by(models.Product.updated_at.desc()).all()
     return products
 
-@app.get("/scrape", response_model=List[schemas.ScrapedResult])
+@app.get("/scrape", response_model=schemas.ScrapeResponse)
 async def scrape(query: str, db: Session = Depends(get_db)):
     """
     Scrape product data for the given query.
-    Runs multi_vendor_scrape synchronously, saves to DB, and returns results.
+    Runs multi_vendor_scrape synchronously, saves to DB, and returns structured response.
     """
     from multi_vendor_scrape import run_multi_vendor_scrape
-    
+    from multi_vendor_scrape import VENDORS
+
     results = await run_multi_vendor_scrape(query, initiator=ScrapeInitiator.API.value)
     
-    return [
-        {"vendor": vendor_name, "product": product.__dict__}
-        for vendor_name, product in results
-    ]
+    vendors_called = len(VENDORS)
+    valid_count = len(results)
+    
+    status = "failure"
+    if valid_count == vendors_called:
+        status = "success"
+    elif valid_count > 0:
+        status = "partial_success"
+
+    return {
+        "query": query,
+        "status": status,
+        "results": [
+            {"vendor": vendor_name, "product": product.__dict__}
+            for vendor_name, product in results
+        ]
+    }
 
 @app.get("/autosuggest")
 async def autosuggest(query: str):

@@ -23,7 +23,7 @@ class Product(Base):
 
     traklin_sku = Column(Integer, primary_key=True)
     vendor_sku = Column(String, primary_key=True)
-    vendor_id = Column(Integer, ForeignKey("vendors.id"))
+    vendor_id = Column(Integer, ForeignKey("vendors.id"), nullable=False)
     name = Column(String, nullable=False)
     description = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)
