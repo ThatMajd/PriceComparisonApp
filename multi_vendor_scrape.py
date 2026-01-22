@@ -12,7 +12,8 @@ from backend.vendor_registeration import (
     PayngoScraper, PayngoConfig,
     ShekemScraper, ShekemConfig,
     LastPriceScraper, LastPriceConfig,
-    NetoScraper, NetoConfig
+    NetoScraper, NetoConfig,
+    BigElectricScraper, BigElectricConfig
 )
 
 # Configure logging
@@ -26,6 +27,7 @@ logger = logging.getLogger(__name__)
 VENDORS = [
     (TraklinScraper, TraklinConfig),
     (NetoScraper, NetoConfig),
+    # (BigElectricScraper, BigElectricConfig),
     # (KSPScraper, KSPConfig),
     # (PayngoScraper, PayngoConfig),
     # (ShekemScraper, ShekemConfig),

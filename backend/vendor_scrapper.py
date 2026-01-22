@@ -161,7 +161,7 @@ class BaseVendorScraper(ABC):
         search_result_product: SearchResultProduct
     ) -> ProductSchema:
         
-        html = LexborHTMLParser(await self._fetch(session, url=search_result_product.url, is_return_json=False))
+        html = LexborHTMLParser(await self._fetch(session, url=search_result_product.url, headers=self.config.headers, params=self.config.params, data=self.config.data, cookies=self.config.cookies, is_return_json=False))
         
         for node in html.css('script[type="application/ld+json"]'):
             prod_obj = json.loads(node.text())
@@ -173,12 +173,11 @@ class BaseVendorScraper(ABC):
             if prod_obj.get("@type") == "Product":
                 
                 prod_sku = prod_obj.get("SKU") or prod_obj["offers"].get("sku") or search_result_product.SKU
-                prod_brand = prod_obj.get("brand") if isinstance(prod_obj.get("brand"), str) else prod_obj.get("brand").get("name")
+                prod_brand = prod_obj.get("brand") if isinstance(prod_obj.get("brand"), str) else prod_obj.get("brand", {"name": ""}).get("name")
                 
                 if not prod_sku:
                     raise ParseException("No valid SKU found")
-                if not prod_brand:
-                    raise ParseException("No brand found")
+
                 
                 return ProductSchema(
                     availability=prod_obj["offers"].get("availability"),

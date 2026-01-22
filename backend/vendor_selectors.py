@@ -1,4 +1,8 @@
 from bs4 import BeautifulSoup
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class InvalidAPIResponseError(Exception):
     """Raised when the API response doesn't match the expected protocol."""
@@ -132,6 +136,10 @@ def ksp_selector(results):
 def neto_selector(results):
     try:
         html = results['10']['html']
+
+        if not html:
+            raise InvalidAPIResponseError("Neto API response 'html' is empty")
+        
     except KeyError:
         raise InvalidAPIResponseError("Neto API response missing 'html' key")
     
@@ -194,7 +202,27 @@ def neto_selector(results):
             "additional_info": additional_info,
         }
         
+
+def bigelectric_selector(results):
+    try:
+        for categories in results["indexes"]:
+            if categories["identifier"] == "magento_catalog_product":
+                prod = categories["items"][0]
+    except KeyError or IndexError:
+        raise InvalidAPIResponseError("BigElectric API response missing 'indexes' key or 'indexes->items' key")
     
+    if not prod:
+        raise InvalidAPIResponseError("BigElectric API returned empty product")
+    
+    return {
+        "name": prod["name"],
+        "SKU": prod["sku"],
+        "url": prod["url"],
+        "img_src": prod["imageUrl"],
+        "orig_price": prod["price"].split('.')[0].replace(',', ''),
+        "disc_price": 0,
+    }
+        
 
 
 _selectors = {

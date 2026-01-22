@@ -73,7 +73,26 @@ NetoConfig = VendorConfig(
         'private_content_version': '39b9a03dc18ecb2a233e93466e165af4',
         'privateData': '%7B%22search%22%3A%22AG%22%7D'
     },
+)
 
+BigElectricConfig = VendorConfig(
+    name="BigElectric",
+    autocomplete_endpoint="https://bigelectric.co.il/searchautocomplete/ajax/suggest/",
+    search_param="q",
+    headers={
+        "user-agent": (
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/141.0.0.0 Safari/537.36"
+    )},
+    params={
+        "store_id": "1",
+        "cat": "false",
+    },
+    cookies={
+        "cf_clearance": "IldlIcGO_SeW2IFCoBw_npyZt33ShniljM67UCu_LpQ-1765656031-1.2.1.1-OfnLrOUmppqIm8nNX9zvbb4hM1w4TxdI2.yvBQgZmMFIrocVeOZ8Por1yKIDjbMxsXHP1BzCM9UcPZLeIxwylnNmuoqBXNuiQjnlL8esgDJ2DkO8eVBz4_rxlK5nmiu.JjSNaguNPi2cuBsU01YlEFv1aI02hvgATmTAWEUzwcJamVHuOR9Z5jOmrex0aFi7GbE5Hj2pbNxJzCa42aGV9ShcBeiSnsduTT.MctuQ6vM",
+    },
+    fetch_method=FetchMethod.HTML_JSON_LD,
 )
 
 
@@ -124,3 +143,9 @@ class KSPScraper(BaseVendorScraper):
 class NetoScraper(BaseVendorScraper):
     def parse_search_result(self, item):
         return SearchResultProduct(**neto_selector(item))
+
+
+class BigElectricScraper(BaseVendorScraper):
+    def parse_search_result(self, item):
+        return SearchResultProduct(**bigelectric_selector(item))
+        
