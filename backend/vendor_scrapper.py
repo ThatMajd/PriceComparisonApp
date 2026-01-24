@@ -1,3 +1,5 @@
+from asyncio.log import logger
+from backend.vendor_exceptions import SearchFailedException
 import asyncio
 import json
 import logging
@@ -58,10 +60,21 @@ class BaseVendorScraper(ABC):
         
         # h = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"}
         
+
         async with self.semaphore:
             try:
-                async with session.get(url, headers=headers, params=params, data=data, cookies=cookies, timeout=timeout) as response:
-                    response.raise_for_status()
+                async with session.get(
+                    url,
+                    headers=headers,
+                    params=params,
+                    data=data,
+                    cookies=cookies,
+                    timeout=timeout
+                ) as response:
+
+                    if response.status != 200:
+                        raise SearchFailedException(f"Error fetching {url}: Status {response.status}")
+                    
                     if is_return_json:
                         return await response.json(content_type=None)
                     return await response.text()
@@ -79,6 +92,30 @@ class BaseVendorScraper(ABC):
         
         search_result_prod: SearchResultProduct = await self.search_product(session, query)
         return await self.get_product_data(session, search_result_prod)
+    
+    async def fetch_product(
+        self,
+        session: aiohttp.ClientSession,
+        url: str,
+        known_sku: Optional[str] = None
+    ) -> Optional[ProductSchema]:
+        """
+        Fetch product data directly from a known URL.
+        Used when a manual/automatic match exists.
+        Bypasses the search step entirely.
+        known_sku: If provided, will be used as fallback SKU if page doesn't contain one.
+        """
+        # TODO: 
+        # This function may be redundant 
+        search_result_prod = SearchResultProduct(
+            name="",
+            url=url,
+            SKU=known_sku,  # Pass known SKU as fallback
+            orig_price=None,
+            disc_price=None
+        )
+        return await self.get_product_data(session, search_result_prod)
+
     
     async def search_product(
         self,
@@ -104,20 +141,24 @@ class BaseVendorScraper(ABC):
                 raise MissingFieldException("query keyword not found in data object, check API behavior")
             data["query"] = query
             
-        raw_products = await self._fetch(session, search_endpoint, headers=headers, params=params, data=data, cookies=cookies, is_return_json=True)
+        # raw_products = await self._fetch(session, search_endpoint, headers=headers, params=params, data=data, cookies=cookies, is_return_json=True)
+        # # Model Search Result
+        # if len(raw_products) == 0:
+        #     return None
         
-        # TODO
-        # Log URL for debugging purposes
+        # # Response may include other items with the products, selectors are used to only return 
+        # # the first product!
+        # search_result = self.parse_search_result(raw_products)
+
+        response = await self._fetch(session, search_endpoint, headers=headers, params=params, data=data, cookies=cookies, is_return_json=True)
+
+        search_result = self.parse_search_result(response)
         
-        # Model Search Result
-        if len(raw_products) == 0:
-            return None
+        # If no results were found selectors must return an empty list []
+        logger.info(f"Result returned from autocomplete endpoint: {search_result}")
+
         
-        # Response may include other items with the products, selectors are used to only return 
-        # the first product!
-        search_result = self.parse_search_result(raw_products)
-        
-        # return most relevant result
+        # returns most relevant result
         return search_result
         
     
