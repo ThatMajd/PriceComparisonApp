@@ -46,6 +46,9 @@ class SearchResultProduct:
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
+    
+    def __bool__(self):
+        return any([self.name, self.description, self.SKU, self.url, self.img_src, self.orig_price, self.disc_price])
 
 
 @dataclass

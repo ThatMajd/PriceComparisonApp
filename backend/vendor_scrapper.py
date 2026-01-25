@@ -60,6 +60,8 @@ class BaseVendorScraper(ABC):
         
         # h = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"}
         
+        if not url:
+            raise ValueError("No URL was provided to the _fetch method, check caller")
 
         async with self.semaphore:
             try:
@@ -90,8 +92,18 @@ class BaseVendorScraper(ABC):
         query: str
     ) -> ProductSchema:
         
-        search_result_prod: SearchResultProduct = await self.search_product(session, query)
-        return await self.get_product_data(session, search_result_prod)
+
+        search_results: List[SearchResultProduct] = await self.search_product(session, query)
+
+        if not search_results:
+            logger.warning(f"No search result found for query: {query}")
+            return None
+
+        # TODO 
+        # choose most relevant product later
+        most_relevant_product = self.select_product(search_results) # return first product for now
+        
+        return await self.get_product_data(session, most_relevant_product)
     
     async def fetch_product(
         self,
@@ -121,7 +133,7 @@ class BaseVendorScraper(ABC):
         self,
         session: aiohttp.ClientSession,
         query: str,
-    ) -> SearchResultProduct:
+    ) -> List[SearchResultProduct]:
         
         config = self.config
         
@@ -152,18 +164,17 @@ class BaseVendorScraper(ABC):
 
         response = await self._fetch(session, search_endpoint, headers=headers, params=params, data=data, cookies=cookies, is_return_json=True)
 
-        search_result = self.parse_search_result(response)
-        
-        # If no results were found selectors must return an empty list []
-        logger.info(f"Result returned from autocomplete endpoint: {search_result}")
+        search_results: List[SearchResultProduct] = self.parse_search_result(response)
 
+
+        logger.info(f"Found {len(search_results)} results for [{self.vendor_name}]:\n{"\n".join(str(i+1) + ": " + prod.name for i, prod in enumerate(search_results))}")
         
-        # returns most relevant result
-        return search_result
+        return search_results
+
         
     
     @abstractmethod
-    def parse_search_result(self, item: Dict[str, Any]) -> SearchResultProduct:
+    def parse_search_result(self, item: Dict[str, Any]) -> List[SearchResultProduct]:
         pass
     
     def select_product(self, items):
@@ -202,6 +213,7 @@ class BaseVendorScraper(ABC):
         search_result_product: SearchResultProduct
     ) -> ProductSchema:
         
+        # logger.info(search_result_product)
         html = LexborHTMLParser(await self._fetch(session, url=search_result_product.url, headers=self.config.headers, params=self.config.params, data=self.config.data, cookies=self.config.cookies, is_return_json=False))
         
         for node in html.css('script[type="application/ld+json"]'):

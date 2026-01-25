@@ -46,6 +46,9 @@ KSPConfig = VendorConfig(
     name="KSP",
     autocomplete_endpoint="https://ksp.co.il/m_action/api/category/0",
     search_param="search",
+    headers={
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36',
+    },
     fetch_method=FetchMethod.API,
     product_data_endpoint="https://ksp.co.il/m_action/api/item"
 )
@@ -98,23 +101,28 @@ BigElectricConfig = VendorConfig(
 
 class TraklinScraper(BaseVendorScraper):
     def parse_search_result(self, item):
-        return SearchResultProduct(**traklin_selector(item))
+        # return SearchResultProduct(**traklin_selector(item))
+        return traklin_selector(item)
 
 class PayngoScraper(BaseVendorScraper):
     def parse_search_result(self, item):
-        return SearchResultProduct(**payngo_selector(item))
+        # return SearchResultProduct(**payngo_selector(item))
+        return payngo_selector(item)
 
 class ShekemScraper(BaseVendorScraper):
     def parse_search_result(self, item):
-        return SearchResultProduct(**shekem_selector(item))
+        # return SearchResultProduct(**shekem_selector(item))
+        return shekem_selector(item)
 
 class LastPriceScraper(BaseVendorScraper):
     def parse_search_result(self, item):
-        return SearchResultProduct(**lastprice_selector(item))
+        # return SearchResultProduct(**lastprice_selector(item))
+        return lastprice_selector(item)
 
 class KSPScraper(BaseVendorScraper):
     def parse_search_result(self, item):
-        return SearchResultProduct(**ksp_selector(item))
+        # return SearchResultProduct(**ksp_selector(item))
+        return ksp_selector(item)
     
     def parse_product_data(self, item: Dict[str, Any], search_result_product: SearchResultProduct) -> ProductSchema:
         item__result__data = item["result"]["data"]
@@ -133,7 +141,7 @@ class KSPScraper(BaseVendorScraper):
             brand=item__result__data["brandName"],
             metadata={
                 "cheaperViaPhone": item__result__data["cheaperPriceViaPhone"],
-                "redMsg": item["result"]["redMsg"],
+                "redMsg": item["result"].get("redMsg", ""),
                 "tags": item["result"]["tags"]
             },
             additional_info=search_result_product.additional_info
@@ -142,10 +150,12 @@ class KSPScraper(BaseVendorScraper):
 
 class NetoScraper(BaseVendorScraper):
     def parse_search_result(self, item):
-        return SearchResultProduct(**neto_selector(item))
+        # return SearchResultProduct(**neto_selector(item))
+        return neto_selector(item)
 
 
 class BigElectricScraper(BaseVendorScraper):
     def parse_search_result(self, item):
-        return SearchResultProduct(**bigelectric_selector(item))
+        # return SearchResultProduct(**bigelectric_selector(item))
+        return bigelectric_selector(item)
         
